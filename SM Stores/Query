@@ -1,0 +1,146 @@
+--1. How many records are in SM-Stores Orders table
+SELECT COUNT(*) AS Records
+FROM orders;
+
+-- 2. How many Cities do SM-stores have properties in.
+SELECT DISTINCT COUNT("PropertyCity") AS CityCount
+FROM propertyinfo;
+
+--3. How many orders were placed in each date stated in the orders table.
+SELECT "OrderDate", COUNT("OrderDate")
+FROM orders
+GROUP BY 1
+ORDER BY 1;
+
+--4. Return all records where the quantity purchased is above 5.
+SELECT *
+FROM orders
+WHERE "Quantity" > 5;
+
+/* 5. A customer has requested for a refund claiming they procured goods from our store.
+Provide all the details of this order if the OrderID is = ‘3896’ */
+SELECT *
+FROM products
+JOIN orders 
+ON orders."ProductID" = products."ProductID"
+JOIN propertyinfo
+ON orders."PropertyID" = propertyinfo."PropID"
+WHERE "OrderID" = 3896;
+
+--6. Can you process the number of orders we had in each year of SM-stores data.
+SELECT LEFT("OrderDate" :: varchar, 4) AS Year, COUNT("OrderID") AS OrderCount
+FROM orders
+GROUP BY 1;
+
+SELECT  EXTRACT(Year FROM "OrderDate") AS Year, COUNT("OrderID") AS OrderCount
+FROM orders
+GROUP BY 1;
+
+--7. Which category is the most frequented in the year 2015.
+SELECT p."ProductCategory", COUNT(p."ProductCategory") AS CategoryCount
+FROM products as p
+JOIN orders as o 
+ON o."ProductID" = p."ProductID"
+WHERE EXTRACT(Year FROM "OrderDate") = 2015
+GROUP BY 1
+LIMIT 1;
+
+--8. Which category has the highest sales in the year 2016.
+SELECT p."ProductCategory", (p."Price" * o."Quantity") AS Sales
+FROM products as p
+JOIN orders as o 
+ON o."ProductID" = p."ProductID"
+WHERE EXTRACT(Year FROM "OrderDate") = 2016
+ORDER BY 2 DESC
+LIMIT 1;
+
+-- 9. Which State has the most goods ordered. 
+
+SELECT "PropertyState", COUNT("Quantity") AS GoodsOrdered
+FROM orders 
+JOIN propertyinfo
+ON orders."PropertyID" = propertyinfo."PropID"
+GROUP BY 1
+ORDER BY 2 DESC
+LIMIT 1;
+
+--Return the state where sales >25000.
+SELECT "PropertyState", Sales
+FROM
+	(SELECT pi."PropertyState", (p."Price" * o."Quantity") AS Sales
+	FROM products as p
+	JOIN orders as o 
+	ON o."ProductID" = p."ProductID"
+	JOIN propertyinfo as pi
+	ON o."PropertyID" = pi."PropID") AS table1
+WHERE Sales > 25000;
+
+--10. What is the cost of a ‘Coffee Maker’ located in Texas.
+SELECT "ProductName", "Price"
+FROM products as p
+JOIN orders as o 
+ON o."ProductID" = p."ProductID"
+JOIN propertyinfo as pi
+ON o."PropertyID" = pi."PropID"
+WHERE "ProductName" = 'Coffee Maker' AND "PropertyState" = 'Texas'
+
+--11. What are the product categories with a product id spanning 10 to 30.
+SELECT "ProductName"
+FROM products
+WHERE "ProductID" BETWEEN 10 AND 30;
+
+--12. How many products start with the letter ‘D’.
+SELECT COUNT("ProductName") AS ProductCount
+FROM products
+WHERE "ProductName" LIKE 'D%';
+
+--13. Find the name and category, property city and state of the product with a productid of 105
+SELECT "ProductName", "ProductCategory", "PropertyCity", "PropertyState"
+FROM products
+JOIN orders 
+ON orders."ProductID" = products."ProductID"
+JOIN propertyinfo
+ON orders."PropertyID" = propertyinfo."PropID"
+WHERE products."ProductID" = 105;
+
+--14. a). Find all orders for ‘Permanent Markers’, ‘Sticky Notes’ and ‘Note Pads’
+SELECT "OrderID", "ProductName"
+FROM products
+JOIN orders 
+ON orders."ProductID" = products."ProductID"
+JOIN propertyinfo
+ON orders."PropertyID" = propertyinfo."PropID"
+WHERE "ProductName" IN ('Permanent Markers', 'Sticky Notes', 'Note Pads');
+
+-- b). Find the number of ‘Permanent Markers’, ‘Sticky Notes’ and ‘Note Pads’ ordered for year 2015.
+SELECT "ProductName", COUNT("OrderID") AS OrderCount
+FROM products
+JOIN orders 
+ON orders."ProductID" = products."ProductID"
+JOIN propertyinfo
+ON orders."PropertyID" = propertyinfo."PropID"
+WHERE "ProductName" IN ('Permanent Markers', 'Sticky Notes', 'Note Pads') 
+AND EXTRACT(Year FROM "OrderDate") = 2015
+GROUP BY 1;
+
+/*15. SM-stores wants to re-evaluate the prices of their goods, provide a list of their
+products, categories and the corresponding prices. Group their products into
+cheap(<$50), affordable(<$100), expensive. Find the number of products in each
+category.*/
+SELECT PriceCategory, COUNT ("ProductName")
+FROM
+	(SELECT "ProductName", "ProductCategory", 
+			CASE WHEN "Price" < 50 THEN 'cheap'
+			WHEN "Price" < 100 THEN 'affordable'
+			ELSE 'expensive' END AS PriceCategory
+	FROM products) AS table1
+GROUP BY 1;
+
+
+
+
+
+
+
+
+
